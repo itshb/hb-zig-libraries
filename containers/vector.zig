@@ -1,7 +1,7 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-fn Vector(comptime T: type) type {
+pub fn Vector(comptime T: type) type {
     return struct {
         size: usize = undefined,
         elements: usize = undefined,
@@ -87,6 +87,13 @@ fn Vector(comptime T: type) type {
 
             if (bAllowShrinkToFit) {
                 try self.shrink();
+            } else {
+                var i = index;
+                for (self.data[i..], i + 1..) |_, j| {
+                    if (j >= self.size) break;
+                    self.data[i] = self.data[j];
+                    i += 1;
+                }
             }
         }
 
@@ -163,6 +170,25 @@ test "VectorAdd" {
     try vector.add(0x7FFFFFFF);
 
     try std.testing.expect(vector.length() == 2 and vector.at(1).?.* == 0x7FFFFFFF);
+}
+
+test "VectorRemove" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator: Allocator = gpa.allocator();
+    var vector = try Vector(i32).init(allocator, null);
+    defer vector.deinit();
+
+    try vector.add(0x7FFFFFFF);
+    try vector.add(0x7FFFFFFF);
+    try vector.add(0x7FFFFFFF);
+
+    try std.testing.expect(vector.length() == 4);
+
+    try vector.remove(2, false);
+    try std.testing.expect(vector.length() == 4);
+
+    try vector.remove(2, true);
+    try std.testing.expect(vector.length() == 2);
 }
 
 test "VectorAppend" {
