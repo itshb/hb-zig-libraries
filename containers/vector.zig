@@ -8,21 +8,21 @@ pub fn Vector(comptime T: type) type {
         allocator: Allocator = undefined,
         data: []T = undefined,
 
-        fn init(allocator: Allocator, size: ?usize) !Vector(T) {
+        pub fn init(allocator: Allocator, size: ?usize) !Vector(T) {
             const sz = if (size == null or size.? <= 1) 1 else size.?;
             var ret = .{ .size = sz, .elements = 0, .allocator = allocator, .data = try allocator.alloc(T, sz) };
             @memset(ret.data[0..], undefined);
             return ret;
         }
 
-        fn deinit(self: *Vector(T)) void {
+        pub fn deinit(self: *Vector(T)) void {
             self.allocator.free(self.data);
             self.data = undefined;
             self.size = undefined;
             self.elements = undefined;
         }
 
-        fn reserve(self: *Vector(T), size: usize) !void {
+        pub fn reserve(self: *Vector(T), size: usize) !void {
             if (size <= self.size) return;
 
             var temp = try self.allocator.alloc(T, size);
@@ -39,7 +39,7 @@ pub fn Vector(comptime T: type) type {
             self.size = size;
         }
 
-        fn append(self: *Vector(T), other: *const Vector(T), bAllowShrinkToFit: bool) !void {
+        pub fn append(self: *Vector(T), other: *const Vector(T), bAllowShrinkToFit: bool) !void {
             const oldSz: usize = self.size;
 
             try self.reserve(self.size + other.size);
@@ -50,7 +50,7 @@ pub fn Vector(comptime T: type) type {
             }
         }
 
-        fn shrink(self: *Vector(T)) !void {
+        pub fn shrink(self: *Vector(T)) !void {
             if (self.elements + 1 == self.size) return;
 
             var temp = try self.allocator.alloc(T, self.elements + 1);
@@ -68,7 +68,7 @@ pub fn Vector(comptime T: type) type {
             self.size = self.elements + 1;
         }
 
-        fn add(self: *Vector(T), value: T) !void {
+        pub fn add(self: *Vector(T), value: T) !void {
             if (self.elements == self.size - 1) {
                 try reserve(self, self.size + 1);
             }
@@ -77,7 +77,7 @@ pub fn Vector(comptime T: type) type {
             self.elements += 1;
         }
 
-        fn remove(self: *Vector(T), index: usize, bAllowShrinkToFit: bool) !void {
+        pub fn remove(self: *Vector(T), index: usize, bAllowShrinkToFit: bool) !void {
             if (index >= self.size) return;
 
             if (self.data[index] != undefined) {
@@ -97,25 +97,25 @@ pub fn Vector(comptime T: type) type {
             }
         }
 
-        fn clear(self: *Vector(T)) !void {
+        pub fn clear(self: *Vector(T)) !void {
             self.deinit();
             self.init(self.allocator, null);
         }
 
-        fn empty(self: *Vector(T)) bool {
+        pub fn empty(self: *Vector(T)) bool {
             return self.elements == 0;
         }
 
-        fn length(self: *Vector(T)) usize {
+        pub fn length(self: *Vector(T)) usize {
             return self.size;
         }
 
-        fn at(self: *Vector(T), index: usize) ?*T {
+        pub fn at(self: *Vector(T), index: usize) ?*T {
             if (index >= self.size) return null;
             return &self.data[index];
         }
 
-        fn find(self: *Vector(T), element: *T) ?usize {
+        pub fn find(self: *Vector(T), element: *T) ?usize {
             if (element.* == undefined) return null;
 
             var idx: usize = 0;
@@ -129,11 +129,11 @@ pub fn Vector(comptime T: type) type {
             return null;
         }
 
-        fn first(self: *Vector(T)) *T {
+        pub fn first(self: *Vector(T)) *T {
             return &self.data[0];
         }
 
-        fn last(self: *Vector(T)) *T {
+        pub fn last(self: *Vector(T)) *T {
             return &self.data[self.size - 1];
         }
     };
